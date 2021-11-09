@@ -1,0 +1,47 @@
+# Python
+__pycache__
+
+# Pypi
+build
+dist
+*.egg-info
+pip-wheel-metadata
+
+# Pipenv
+.env
+.venv
+
+# PyTest
+.pytest_cache
+pytest.xml
+
+# Coverage
+.coverage
+.coverage.*
+htmlcov
+coverage.xml
+
+# MyPy
+.mypy_cache
+
+# IDE
+.vscode
+.idea
+
+# MacOS
+.DS_Store
+.localized
+*~
+
+#Vim
+# Swap
+[._]*.s[a-v][a-z]
+!*.svg  # comment out if you don't need vector files
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+
+# Temporary
+.netrwhist
+*~

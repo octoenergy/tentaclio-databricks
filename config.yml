@@ -1,0 +1,177 @@
+---
+# https://circleci.com/docs/2.1/language-python/
+version: 2.1
+
+
+orbs:
+
+
+  aws-cli: circleci/aws-cli@1.2.1
+  aws-ecr: circleci/aws-ecr@6.10.0
+
+
+  aws-eks: circleci/aws-eks@0.2.6
+  kubernetes: circleci/kubernetes@0.11.0
+
+
+executors:
+  standard:
+    docker:
+      - image: circleci/python:3.6
+        environment:
+          PIPENV_VENV_IN_PROJECT: true
+    working_directory: "~/lib"
+
+# -----------------
+# Reusable commands
+# -----------------
+
+commands:
+  configure_github:
+    steps:
+      - run:
+          name: Configure Github access
+          command: |
+            git config --global --unset url.ssh://git@github.com.insteadof;\
+            echo https://${GITHUB_TOKEN}:@github.com > ~/.git-credentials
+            git config --global credential.helper store
+
+  checkout_source:
+    steps:
+      - restore_cache:
+          keys:
+            - source-{{ .Branch }}-{{ .Revision }}
+            - source-{{ .Branch }}-
+            - source-
+      - checkout
+      - save_cache:
+          key: source-{{ .Branch }}-{{ .Revision }}
+          paths:
+            - "./.git"
+
+  update_virtualenv:
+    steps:
+      - restore_cache:
+          keys:
+            - virtualenv-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+            - virtualenv-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-
+            - virtualenv-{{ .Environment.CACHE_VERSION }}-
+      - configure_github
+      - run:
+          name: Install Python packages
+          command: make sync
+      - save_cache:
+          key: virtualenv-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+          paths:
+            - "./.venv"
+
+  install_ecr:
+    steps:
+      - aws-cli/install
+      - aws-cli/setup:
+          # Env-var-type parameter
+          aws-region: AWS_REGION
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - aws-ecr/ecr-login
+
+  push_image:
+    steps:
+      - run:
+          name: Build, tag and push Docker images to ECR
+          command: make docker-push
+
+
+  install_kubectl:
+    steps:
+      - aws-cli/install
+      - aws-cli/setup:
+          # Env-var-type parameter
+          aws-region: AWS_REGION
+      - kubernetes/install-kubectl
+      - aws-eks/update-kubeconfig-with-authenticator:
+          # String-type parameter
+          aws-region: ${AWS_REGION}
+          cluster-name: "kubernetes"
+
+# --------------
+# Pipeline tasks
+# --------------
+
+jobs:
+  lint:
+    executor: standard
+    steps:
+      - checkout_source
+      - update_virtualenv
+      - run:
+          name: Run Python linter
+          command: make lint
+
+  test:
+    executor: standard
+    steps:
+      - checkout_source
+      - update_virtualenv
+      - run:
+          name: Run Python unit tests
+          command: make test
+
+
+  push-image:
+    executor: standard
+    environment:
+      IMAGE_TAG: ${CIRCLE_SHA1}
+    steps:
+      - checkout
+      - install_ecr
+      - push_image
+
+
+  deploy:
+    executor: standard
+    environment:
+      IMAGE_TAG: ${CIRCLE_SHA1}
+    steps:
+      - checkout
+      - install_kubectl
+      - run:
+          name: Apply kubernetes resources
+          command: make kubernetes-apply
+      - run:
+          name: Rollout new version
+          command: make kubernetes-rollout
+
+
+# -----------------
+# Pipeline workflow
+# -----------------
+
+workflows:
+  version: 2
+
+  build:
+    jobs:
+      - lint:
+          context: DATA_TEAM_AWS
+      - test:
+          context: DATA_TEAM_AWS
+
+      - push-image:
+          context: DATA_TEAM_AWS
+          requires:
+            - lint
+            - test
+          filters:
+            branches:
+              only: main
+
+
+      - deploy:
+          context: DATA_TEAM_AWS
+          requires:
+            - push-image
+          filters:
+            branches:
+              only: main
+
