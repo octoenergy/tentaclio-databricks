@@ -108,70 +108,7 @@ jobs:
           name: Run Python linter
           command: make lint
 
-  test:
-    executor: standard
-    steps:
-      - checkout_source
-      - update_virtualenv
-      - run:
-          name: Run Python unit tests
-          command: make test
-
-
-  push-image:
-    executor: standard
-    environment:
-      IMAGE_TAG: ${CIRCLE_SHA1}
-    steps:
-      - checkout
-      - install_ecr
-      - push_image
-
-
-  deploy:
-    executor: standard
-    environment:
-      IMAGE_TAG: ${CIRCLE_SHA1}
-    steps:
-      - checkout
-      - install_kubectl
-      - run:
-          name: Apply kubernetes resources
-          command: make kubernetes-apply
-      - run:
-          name: Rollout new version
-          command: make kubernetes-rollout
-
 
 # -----------------
 # Pipeline workflow
 # -----------------
-
-workflows:
-  version: 2
-
-  build:
-    jobs:
-      - lint:
-          context: DATA_TEAM_AWS
-      - test:
-          context: DATA_TEAM_AWS
-
-      - push-image:
-          context: DATA_TEAM_AWS
-          requires:
-            - lint
-            - test
-          filters:
-            branches:
-              only: main
-
-
-      - deploy:
-          context: DATA_TEAM_AWS
-          requires:
-            - push-image
-          filters:
-            branches:
-              only: main
-
