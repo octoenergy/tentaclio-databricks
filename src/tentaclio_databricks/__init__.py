@@ -8,8 +8,8 @@ The main benefits are:
     the underlying implementation (thanks to sqlalchemy).
     * Credentials management that allows a distributed credentials storage.
 """
-from tentaclio import *
+from tentaclio import *  # noqa
 from .clients.databricks_client import DatabricksClient
 
 # Add DB registry
-DB_REGISTRY.register("databricks+pyodbc", DatabricksClient)
+DB_REGISTRY.register("databricks+pyodbc", DatabricksClient)  # noqa
