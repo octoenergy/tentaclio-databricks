@@ -1,23 +1,15 @@
 ---
-# https://circleci.com/docs/2.1/language-python/
+# Python CircleCI 2.0 configuration file
+#
+# INFO: Check CircleCI documentation for more details
+#       https://circleci.com/docs/2.0/language-python/
+
 version: 2.1
-
-
-orbs:
-
-
-  aws-cli: circleci/aws-cli@1.2.1
-  aws-ecr: circleci/aws-ecr@6.10.0
-
-
-  aws-eks: circleci/aws-eks@0.2.6
-  kubernetes: circleci/kubernetes@0.11.0
-
 
 executors:
   standard:
     docker:
-      - image: circleci/python:3.6
+      - image: circleci/python:3.9
         environment:
           PIPENV_VENV_IN_PROJECT: true
     working_directory: "~/lib"
@@ -65,39 +57,6 @@ commands:
           paths:
             - "./.venv"
 
-  install_ecr:
-    steps:
-      - aws-cli/install
-      - aws-cli/setup:
-          # Env-var-type parameter
-          aws-region: AWS_REGION
-      - setup_remote_docker:
-          docker_layer_caching: true
-      - aws-ecr/ecr-login
-
-  push_image:
-    steps:
-      - run:
-          name: Build, tag and push Docker images to ECR
-          command: make docker-push
-
-
-  install_kubectl:
-    steps:
-      - aws-cli/install
-      - aws-cli/setup:
-          # Env-var-type parameter
-          aws-region: AWS_REGION
-      - kubernetes/install-kubectl
-      - aws-eks/update-kubeconfig-with-authenticator:
-          # String-type parameter
-          aws-region: ${AWS_REGION}
-          cluster-name: "kubernetes"
-
-# --------------
-# Pipeline tasks
-# --------------
-
 jobs:
   lint:
     executor: standard
@@ -108,7 +67,21 @@ jobs:
           name: Run Python linter
           command: make lint
 
+  test:
+    executor: standard
+    steps:
+      - checkout_source
+      - update_virtualenv
+      - run:
+          name: Run Python unit tests
+          command: make test
 
-# -----------------
-# Pipeline workflow
-# -----------------
+
+
+workflows:
+  version: 2
+
+  test-build-deploy:
+    jobs:
+      - lint
+      - test
