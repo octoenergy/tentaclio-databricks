@@ -84,6 +84,33 @@ jobs:
           name: Run Python unit tests
           command: make test
 
+  release:
+    executor: standard
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - pip-cache-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+            - pip-cache-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-
+            - pip-cache-{{ .Environment.CACHE_VERSION }}-
+      - run:
+          name: Verify git tag vs. version
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            python setup.py verify
+      - run:
+          name: Init .pypirc
+          command: |
+            echo -e "[pypi]" >> ~/.pypirc
+            echo -e "username = octoenergy" >> ~/.pypirc
+            echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
+      - run:
+          name: Create release
+          command: |
+            make release
+
+
 workflows:
   version: 2
 
@@ -91,3 +118,8 @@ workflows:
     jobs:
       - lint
       - test
+      - release:
+          filters:
+            branches:
+              only: master
+          context: TENTACLIO

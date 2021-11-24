@@ -46,3 +46,13 @@ format: ## Run black and isort
 .PHONY: test
 test: ## Run unit tests
 	pipenv run pytest tests
+
+# Release
+package:
+	# create a source distribution
+	pipenv run python setup.py sdist
+	# create a wheel
+	pipenv run python setup.py bdist_wheel
+
+release: package
+	pipenv run twine upload dist/*
