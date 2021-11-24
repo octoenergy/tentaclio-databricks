@@ -10,6 +10,7 @@ help:
 
 install: ## Initalise the virtual env installing deps
 	pipenv install --dev
+	pipenv run pip install -e .
 
 clean: ## Remove all the unwanted clutter
 	find src -type d -name __pycache__ | xargs rm -rf
@@ -24,29 +25,34 @@ update: ## Update dependencies (whole tree)
 
 sync: ## Install dependencies as per the lock file
 	pipenv sync --dev
+	pipenv run pip install -e .
 
 # Linting and formatting
 .PHONY: lint test format
 
 lint: ## Lint files with flake and mypy
-	pipenv run flake8 src
-	pipenv run flake8 tests
-	pipenv run mypy src
-	pipenv run mypy tests
-	pipenv run black --check src
-	pipenv run black --check tests
-	pipenv run isort --check-only src
-	pipenv run isort --check-only tests
+	pipenv run flake8 src tests
+	pipenv run mypy src tests
+	pipenv run black --check src tests
+	pipenv run isort --check-only src tests
 
 
 format: ## Run black and isort
-	pipenv run black src
-	pipenv run black tests
-	pipenv run isort src
-	pipenv run isort tests
+	pipenv run black src tests
+	pipenv run isort src tests
 
 # Testing
 
 .PHONY: test
 test: ## Run unit tests
 	pipenv run pytest tests
+
+# Release
+package:
+	# create a source distribution
+	pipenv run python setup.py sdist
+	# create a wheel
+	pipenv run python setup.py bdist_wheel
+
+release: package
+	pipenv run twine upload dist/*

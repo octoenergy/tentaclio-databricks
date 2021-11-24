@@ -1,9 +1,11 @@
-import pytest
-from tentaclio_databricks.clients.databricks_client import (
-    build_odbc_connection_string,
-    DatabricksClient,
-)
 from typing import Dict
+
+import pytest
+
+from tentaclio_databricks.clients.databricks_client import (
+    DatabricksClient,
+    build_odbc_connection_string,
+)
 
 
 @pytest.mark.parametrize(
@@ -17,7 +19,7 @@ from typing import Dict
                 "HOST": "db_host",
                 "PORT": 443,
                 "Schema": "database",
-            }
+            },
         ),
         (
             "databricks+pyodbc://my_t0k3n@db_host:443/",
@@ -27,7 +29,7 @@ from typing import Dict
                 "HOST": "db_host",
                 "PORT": 443,
                 "Schema": "",
-            }
+            },
         ),
         (
             "databricks+pyodbc://my_t0k3n@db_host:443/database"
@@ -39,15 +41,15 @@ from typing import Dict
                 "HOST": "db_host",
                 "PORT": 443,
                 "Schema": "database",
-                "AuthMech": '3',
+                "AuthMech": "3",
                 "HTTPPath": "sql/protocolv1/",
                 "IgnoreTransactions": "1",
                 "SSL": "1",
                 "ThriftTransport": "2",
                 "SparkServerType": "3",
-                "DRIVER": "/path/to/driver"
-            }
-        )
+                "DRIVER": "/path/to/driver",
+            },
+        ),
     ],
 )
 def test_build_odbc_connection_dict(url: str, expected: Dict):

@@ -1,9 +1,8 @@
 """Databricks query client."""
-from typing import Dict
 import urllib
+from typing import Dict
 
-from sqlalchemy.engine import Connection, create_engine
-
+from sqlalchemy.engine import Connection, Engine, create_engine
 from tentaclio.clients import sqla_client
 
 
@@ -15,9 +14,7 @@ class DatabricksClient(sqla_client.SQLAlchemyClient):
         connection_url = build_odbc_connection_string(**odbc_connection_map)
 
         if self.engine is None:
-            self.engine = create_engine(
-                f"mssql+pyodbc:///?odbc_connect={connection_url}"
-            )
+            self.engine: Engine = create_engine(f"mssql+pyodbc:///?odbc_connect={connection_url}")
         return self.engine.connect()
 
     def _build_odbc_connection_dict(self) -> Dict:
