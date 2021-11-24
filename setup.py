@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*
-
 import os
 import pathlib
+import sys
 
 from setuptools import find_packages, setup
+from setuptools.command.install import install
 
 # allow setup.py to be run from any path
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
@@ -13,9 +14,24 @@ VERSION = "0.0.0.1"
 
 REPO_ROOT = pathlib.Path(__file__).parent
 
+
 # Fetch the long description from the readme
 with open(REPO_ROOT / "README.md", encoding="utf-8") as f:
     README = f.read()
+
+
+class VerifyVersionCommand(install):
+    """Custom command to verify that the git tag matches our version."""
+
+    description = "verify that the git tag matches our version"
+
+    def run(self):
+        tag = os.getenv("CIRCLE_TAG")
+
+        if tag != VERSION:
+            info = f"Git tag: {tag} does not match the version of this app: {VERSION}"
+            sys.exit(info)
+
 
 install_requires = [
     "tentaclio",
@@ -47,6 +63,7 @@ setup_args = dict(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
     ],
+    cmdclass={"verify": VerifyVersionCommand},
 )
 
 
