@@ -41,6 +41,13 @@ commands:
           paths:
             - "./.git"
 
+  install_unixodbc:
+    steps:
+      - run:
+          name: Instal UnixODBC
+          command: |
+            sudo apt-get install unixodbc-dev -y
+
   update_virtualenv:
     steps:
       - restore_cache:
@@ -49,6 +56,7 @@ commands:
             - virtualenv-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-
             - virtualenv-{{ .Environment.CACHE_VERSION }}-
       - configure_github
+      - install_unixodbc
       - run:
           name: Install Python packages
           command: make sync
@@ -75,8 +83,6 @@ jobs:
       - run:
           name: Run Python unit tests
           command: make test
-
-
 
 workflows:
   version: 2

@@ -9,7 +9,9 @@ The main benefits are:
     * Credentials management that allows a distributed credentials storage.
 """
 from tentaclio import *  # noqa
+
 from .clients.databricks_client import DatabricksClient
 
+
 # Add DB registry
-DB_REGISTRY.register("databricks+pyodbc", DatabricksClient)  # noqa
+DB_REGISTRY.register("databricks+pyodbc", DatabricksClient)  # type: ignore

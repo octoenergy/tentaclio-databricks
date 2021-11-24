@@ -6,4 +6,4 @@ and in an interchangable manner.
 Query based clients unify how to access databases leveraging from sqlalchemy.
 """
 
-from .databricks_client import * # noqa
+from .databricks_client import *  # noqa

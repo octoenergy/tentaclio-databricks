@@ -38,7 +38,7 @@ lint: ## Lint files with flake and mypy
 
 
 format: ## Run black and isort
-	pipenv run black src test
+	pipenv run black src tests
 	pipenv run isort src tests
 
 # Testing
