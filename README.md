@@ -1,7 +1,7 @@
 
 # tentaclio-databricks
 
-A package containing all the dependencies for schema Databricks:pyodbc for tentaclio.
+A package containing all the dependencies for the `databricks+pyodbc` tentaclio schema .
 
 ## Quick Start
 
