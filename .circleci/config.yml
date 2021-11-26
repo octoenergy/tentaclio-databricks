@@ -87,7 +87,8 @@ jobs:
   release:
     executor: standard
     steps:
-      - checkout
+      - checkout_source
+      - update_virtualenv
       - restore_cache:
           keys:
             - pip-cache-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
