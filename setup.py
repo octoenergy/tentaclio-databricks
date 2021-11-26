@@ -10,7 +10,7 @@ from setuptools.command.install import install
 # allow setup.py to be run from any path
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
-VERSION = "0.0.0.1"
+VERSION = "0.0.1"
 
 REPO_ROOT = pathlib.Path(__file__).parent
 
