@@ -110,18 +110,26 @@ jobs:
           command: |
             make release
 
-
 workflows:
   version: 2
 
   test-build-deploy:
     jobs:
-      - lint
-      - test
-      - release:
+      - lint:
           filters:
-            branches:
-              only: master
             tags:
-              only: /[0-9]+(\.[0-9]+)*/
-          context: TENTACLIO
+              only: /.*/
+      - test:
+          filters:
+            tags:
+              only: /.*/
+      - release:
+          requires:
+            - lint
+            - test
+          filters:
+            tags:
+              only: /[0-9]+(\.[0-9]+)*(-alpha\.[0-9]+)?/
+            branches:
+              ignore: /.*/
+
