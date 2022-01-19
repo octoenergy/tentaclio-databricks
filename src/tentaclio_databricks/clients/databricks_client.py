@@ -1,36 +1,41 @@
 """Databricks query client."""
-import urllib
-from typing import Dict
+from typing import List
 
-from sqlalchemy.engine import Connection, Engine, create_engine
-from tentaclio.clients import sqla_client
-
-
-class DatabricksClient(sqla_client.SQLAlchemyClient):
-    """Databricks client, backed by a pyodbc + SQLAlchemy connection."""
-
-    def _connect(self) -> Connection:
-        odbc_connection_map = self._build_odbc_connection_dict()
-        connection_url = build_odbc_connection_string(**odbc_connection_map)
-
-        if self.engine is None:
-            self.engine: Engine = create_engine(f"mssql+pyodbc:///?odbc_connect={connection_url}")
-        return self.engine.connect()
-
-    def _build_odbc_connection_dict(self) -> Dict:
-        odbc_connection_string_map = {
-            "UID": "token",
-            "PWD": self.username,
-            "HOST": self.host,
-            "PORT": self.port,
-            "Schema": self.database,
-        }
-        if self.url.query:
-            odbc_connection_string_map.update(self.url.query)
-        return odbc_connection_string_map
+import pandas as pd
+from databricks import sql
+from tentaclio import URL
 
 
-def build_odbc_connection_string(**kwargs) -> str:
-    """Build a url formatted odbc connection string from kwargs."""
-    connection_url = ";".join([f"{k}={v}" for k, v in kwargs.items()])
-    return urllib.parse.quote(connection_url)
+class DatabricksClient:
+    """Databricks client, backed by an Apache Thrift connection."""
+
+    def __init__(self, url: URL, **kwargs):
+        self.server_hostname = url.hostname
+        self.http_path = url.query["HTTPPath"]
+        self.access_token = url.username
+
+    def __enter__(self):
+        self.conn = sql.connect(
+            server_hostname=self.server_hostname,
+            http_path=self.http_path,
+            access_token=self.access_token,
+        )
+        self.cursor = self.conn.cursor()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.conn.close()
+        self.cursor.close()
+
+    def query(self, sql_query: str, **kwargs) -> List[tuple]:
+        """Execute a SQL query, and return results."""
+        self.cursor.execute(sql_query, **kwargs)
+        return self.cursor.fetchall()
+
+    def execute(self, sql_query: str, **kwargs) -> None:
+        """Execute a raw SQL query command."""
+        self.cursor.execute(sql_query, **kwargs)
+
+    def get_df(self, sql_query: str, params: dict = None, **kwargs) -> pd.DataFrame:
+        """Run a raw SQL query and return a data frame."""
+        return pd.read_sql(sql_query, self.conn, params=params, **kwargs)

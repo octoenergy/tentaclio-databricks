@@ -35,8 +35,7 @@ class VerifyVersionCommand(install):
 
 install_requires = [
     "tentaclio",
-    "pyodbc",
-    "psycopg2",
+    "databricks-sql-connector",
 ]
 
 
@@ -44,7 +43,7 @@ setup_args = dict(
     name="tentaclio-databricks",
     version=VERSION,
     include_package_data=True,
-    description="A python project containing all the dependencies for schema databricks:pyodbc for tentaclio.",
+    description="A python project containing all the dependencies for the databricks+thrift tentaclio schema.",
     long_description=README,
     long_description_content_type="text/markdown",
     author="Octopus Energy",
