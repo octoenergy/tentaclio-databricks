@@ -1,63 +1,32 @@
-from typing import Dict
-
 import pytest
+from tentaclio import URL
 
-from tentaclio_databricks.clients.databricks_client import (
-    DatabricksClient,
-    build_odbc_connection_string,
-)
+from tentaclio_databricks.clients.databricks_client import DatabricksClient
 
 
 @pytest.mark.parametrize(
-    "url, expected",
+    "url, server_hostname, http_path, access_token",
     [
         (
-            "databricks+pyodbc://my_t0k3n@db_host:443/database",
-            {
-                "UID": "token",
-                "PWD": "my_t0k3n",
-                "HOST": "db_host",
-                "PORT": 443,
-                "Schema": "database",
-            },
+            "databricks+thrift://my_t0k3n@host.databricks.com"
+            "?HTTPPath=/sql/1.0/endpoints/123456789",
+            "host.databricks.com",
+            "/sql/1.0/endpoints/123456789",
+            "my_t0k3n",
         ),
         (
-            "databricks+pyodbc://my_t0k3n@db_host:443/",
-            {
-                "UID": "token",
-                "PWD": "my_t0k3n",
-                "HOST": "db_host",
-                "PORT": 443,
-                "Schema": "",
-            },
-        ),
-        (
-            "databricks+pyodbc://my_t0k3n@db_host:443/database"
-            "?HTTPPath=sql/protocolv1/&AuthMech=3&SparkServerType=3"
-            "&ThriftTransport=2&SSL=1&IgnoreTransactions=1&DRIVER=/path/to/driver",
-            {
-                "UID": "token",
-                "PWD": "my_t0k3n",
-                "HOST": "db_host",
-                "PORT": 443,
-                "Schema": "database",
-                "AuthMech": "3",
-                "HTTPPath": "sql/protocolv1/",
-                "IgnoreTransactions": "1",
-                "SSL": "1",
-                "ThriftTransport": "2",
-                "SparkServerType": "3",
-                "DRIVER": "/path/to/driver",
-            },
+            "databricks+thrift://my_t0k3n@host.databricks.com:443/"
+            "?HTTPPath=/sql/1.0/endpoints/123456789"
+            "&AuthMech=3&SparkServerType=3&ThriftTransport=2&SSL=1&"
+            "IgnoreTransactions=1&DRIVER=/Library/simba/spark/lib/libsparkodbc_sbu.dylib",
+            "host.databricks.com",
+            "/sql/1.0/endpoints/123456789",
+            "my_t0k3n",
         ),
     ],
 )
-def test_build_odbc_connection_dict(url: str, expected: Dict):
-    output = DatabricksClient(url)._build_odbc_connection_dict()
-    assert output == expected
-
-
-def test_build_odbc_connection_string():
-    conn_dict = {"UID": "user", "PWD": "p@ssw0rd", "HOST": "db_host", "PORT": 443}
-    output = build_odbc_connection_string(**conn_dict)
-    assert output == "UID%3Duser%3BPWD%3Dp%40ssw0rd%3BHOST%3Ddb_host%3BPORT%3D443"
+def test_build_odbc_connection_dict(url, server_hostname, http_path, access_token):
+    client = DatabricksClient(URL(url))
+    assert client.server_hostname == server_hostname
+    assert client.http_path == http_path
+    assert client.access_token == access_token
