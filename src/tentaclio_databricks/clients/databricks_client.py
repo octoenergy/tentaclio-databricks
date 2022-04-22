@@ -9,10 +9,11 @@ from tentaclio import URL
 class DatabricksClient:
     """Databricks client, backed by an Apache Thrift connection."""
 
-    def __init__(self, url: URL, **kwargs):
+    def __init__(self, url: URL, arraysize: int = 1000000, **kwargs):
         self.server_hostname = url.hostname
         self.http_path = url.query["HTTPPath"]
         self.access_token = url.username
+        self.arraysize = arraysize
 
     def __enter__(self):
         self.conn = sql.connect(
@@ -20,7 +21,7 @@ class DatabricksClient:
             http_path=self.http_path,
             access_token=self.access_token,
         )
-        self.cursor = self.conn.cursor()
+        self.cursor = self.conn.cursor(arraysize=self.arraysize)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -36,6 +37,6 @@ class DatabricksClient:
         """Execute a raw SQL query command."""
         self.cursor.execute(sql_query, **kwargs)
 
-    def get_df(self, sql_query: str, params: dict = None, **kwargs) -> pd.DataFrame:
+    def get_df(self, sql_query: str, **kwargs) -> pd.DataFrame:
         """Run a raw SQL query and return a data frame."""
-        return pd.read_sql(sql_query, self.conn, params=params, **kwargs)
+        return pd.DataFrame(self.query(sql_query, **kwargs))
