@@ -39,4 +39,6 @@ class DatabricksClient:
 
     def get_df(self, sql_query: str, **kwargs) -> pd.DataFrame:
         """Run a raw SQL query and return a data frame."""
-        return pd.DataFrame(self.query(sql_query, **kwargs))
+        data = self.query(sql_query, **kwargs)
+        columns = [col_desc[0] for col_desc in self.cursor.description]
+        return pd.DataFrame(data, columns=columns)
