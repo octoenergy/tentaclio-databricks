@@ -2,11 +2,14 @@ import pandas as pd
 import pytest
 from tentaclio import URL
 
-from tentaclio_databricks.clients.databricks_client import DatabricksClient
+from tentaclio_databricks.clients.databricks_client import (
+    DatabricksClient,
+    DatabricksClientException,
+)
 
 
 @pytest.mark.parametrize(
-    "url, server_hostname, http_path, access_token",
+    "url,server_hostname,http_path,access_token",
     [
         (
             "databricks+thrift://my_t0k3n@host.databricks.com"
@@ -41,3 +44,17 @@ def test_get_df(mocker):
     client.cursor.description = [("id", "int", None)]
     df = client.get_df("foo")
     assert df.equals(expected)
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "databricks+thrift://my_t0k3n@host.databricks.com",
+        "databricks+thrift://shhhh@host.databricks.co.uk?http_path="
+        "/sql/1.0/endpoints/987654321",
+        "databricks+thrift://host.databricks.co.uk?HTTPPath=/sql/1.0/endpoints/987654321",
+    ],
+)
+def test_error_http_path(url):
+    with pytest.raises(DatabricksClientException):
+        DatabricksClient(URL(url))
