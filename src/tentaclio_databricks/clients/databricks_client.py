@@ -6,10 +6,30 @@ from databricks import sql
 from tentaclio import URL
 
 
+class DatabricksClientException(Exception):
+    """Databricks client specific exception."""
+
+
 class DatabricksClient:
     """Databricks client, backed by an Apache Thrift connection."""
 
     def __init__(self, url: URL, arraysize: int = 1000000, **kwargs):
+
+        # This is a very common issue reported by the users
+        if url.query is None or "HTTPPath" not in url.query:
+            raise DatabricksClientException(
+                "Missing the HTTPPath element in the http query. \n\n"
+                "The url should look like: "
+                "databricks+thrift://workspaceurl.databricks.com/?HTTPPath=value\n"
+                "Check the connection details of your databricks warehouse"
+            )
+        if url.username is None or url.username == "":
+            raise DatabricksClientException(
+                "Missing the token in the url:\n\n"
+                "The url should look like: "
+                "databricks+thrift://token@workspaceurl.databricks.com/?HTTPPath=value"
+            )
+
         self.server_hostname = url.hostname
         self.http_path = url.query["HTTPPath"]
         self.access_token = url.username
