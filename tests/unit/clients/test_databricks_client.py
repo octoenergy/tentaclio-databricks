@@ -1,4 +1,5 @@
 import pandas as pd
+import pyarrow as pa
 import pytest
 from tentaclio import URL
 
@@ -44,6 +45,16 @@ def test_get_df(mocker):
     client.cursor.description = [("id", "int", None)]
     df = client.get_df("foo")
     assert df.equals(expected)
+
+def test_get_arrow_table(mocker):
+    expected = pa.Table.from_pydict({"id": [1, 2, 3]})
+    url = "databricks+thrift://my_t0k3n@host.databricks.com?HTTPPath=/sql/1.0/endpoints/123456789"
+    client = DatabricksClient(URL(url))
+    client.cursor = mocker.MagicMock()
+    client.cursor.execute = lambda _: _
+    client.cursor.fetchall_arrow = lambda: pa.Table.from_pydict({"id": [1, 2, 3]})
+    table = client.get_arrow_table("foo")
+    assert table == expected
 
 
 @pytest.mark.parametrize(
