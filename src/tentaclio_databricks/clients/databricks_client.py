@@ -1,5 +1,6 @@
 """Databricks query client."""
 import pandas as pd
+import pyarrow as pa
 from databricks import sql
 from databricks.sql.types import Row
 from tentaclio import URL
@@ -61,3 +62,8 @@ class DatabricksClient:
         data = self.query(sql_query, **kwargs)
         columns = [col_desc[0] for col_desc in self.cursor.description]
         return pd.DataFrame(data, columns=columns)
+    
+    def get_arrow_table(self, sql_query: str, **kwargs) -> pa.Table:
+        """Run a raw SQL query and return a `pyarrow.Table`."""
+        self.cursor.execute(sql_query, **kwargs)
+        return self.cursor.fetchall_arrow()
