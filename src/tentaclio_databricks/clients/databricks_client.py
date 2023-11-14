@@ -14,7 +14,6 @@ class DatabricksClient:
     """Databricks client, backed by an Apache Thrift connection."""
 
     def __init__(self, url: URL, arraysize: int = 1000000, **kwargs):
-
         # This is a very common issue reported by the users
         if url.query is None or "HTTPPath" not in url.query:
             raise DatabricksClientException(
@@ -62,7 +61,7 @@ class DatabricksClient:
         data = self.query(sql_query, **kwargs)
         columns = [col_desc[0] for col_desc in self.cursor.description]
         return pd.DataFrame(data, columns=columns)
-    
+
     def get_arrow_table(self, sql_query: str, **kwargs) -> pa.Table:
         """Run a raw SQL query and return a `pyarrow.Table`."""
         self.cursor.execute(sql_query, **kwargs)

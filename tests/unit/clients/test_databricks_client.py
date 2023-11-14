@@ -46,6 +46,7 @@ def test_get_df(mocker):
     df = client.get_df("foo")
     assert df.equals(expected)
 
+
 def test_get_arrow_table(mocker):
     expected = pa.Table.from_pydict({"id": [1, 2, 3]})
     url = "databricks+thrift://my_t0k3n@host.databricks.com?HTTPPath=/sql/1.0/endpoints/123456789"
