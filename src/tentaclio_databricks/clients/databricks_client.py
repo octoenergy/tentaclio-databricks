@@ -1,8 +1,7 @@
 """Databricks query client."""
-from typing import List
-
 import pandas as pd
 from databricks import sql
+from databricks.sql.types import Row
 from tentaclio import URL
 
 
@@ -48,7 +47,7 @@ class DatabricksClient:
         self.conn.close()
         self.cursor.close()
 
-    def query(self, sql_query: str, **kwargs) -> List[tuple]:
+    def query(self, sql_query: str, **kwargs) -> list[Row]:
         """Execute a SQL query, and return results."""
         self.cursor.execute(sql_query, **kwargs)
         return self.cursor.fetchall()
