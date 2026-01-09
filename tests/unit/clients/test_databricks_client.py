@@ -40,8 +40,9 @@ def test_get_df(mocker):
     client = DatabricksClient(URL(url))
     client.__enter__ = lambda _: client  # type: ignore
     client.query = lambda _: [1, 2, 3]  # type: ignore
-    client.cursor = mocker.MagicMock()
-    client.cursor.description = [("id", "int", None)]
+    mocked_cursor = mocker.MagicMock()
+    mocked_cursor.description = [("id", "int", None)]
+    client.cursor = mocked_cursor
     df = client.get_df("foo")
     assert df.equals(expected)
 
