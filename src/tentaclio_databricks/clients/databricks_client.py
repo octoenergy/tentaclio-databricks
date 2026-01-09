@@ -1,5 +1,6 @@
 """Databricks query client."""
-from typing import List
+
+from typing import Any, List
 
 import pandas as pd
 from databricks import sql
@@ -48,7 +49,7 @@ class DatabricksClient:
         self.conn.close()
         self.cursor.close()
 
-    def query(self, sql_query: str, **kwargs) -> List[tuple]:
+    def query(self, sql_query: str, **kwargs) -> List[Any]:
         """Execute a SQL query, and return results."""
         self.cursor.execute(sql_query, **kwargs)
         return self.cursor.fetchall()
@@ -60,5 +61,9 @@ class DatabricksClient:
     def get_df(self, sql_query: str, **kwargs) -> pd.DataFrame:
         """Run a raw SQL query and return a data frame."""
         data = self.query(sql_query, **kwargs)
-        columns = [col_desc[0] for col_desc in self.cursor.description]
+        columns = (
+            [col_desc[0] for col_desc in self.cursor.description]
+            if self.cursor.description
+            else []
+        )
         return pd.DataFrame(data, columns=columns)

@@ -1,4 +1,5 @@
-"""This package implements the tentaclio databricks+pyodbc database client """
+"""This package implements the tentaclio databricks+pyodbc database client"""
+
 from tentaclio import *  # noqa
 
 from .clients.databricks_client import DatabricksClient
