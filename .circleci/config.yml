@@ -10,8 +10,6 @@ executors:
   standard:
     docker:
       - image: circleci/python:3.9
-        environment:
-          PIPENV_VENV_IN_PROJECT: true
     working_directory: "~/lib"
 
 # -----------------
@@ -52,16 +50,19 @@ commands:
     steps:
       - restore_cache:
           keys:
-            - virtualenv-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+            - virtualenv-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ checksum "uv.lock" }}
             - virtualenv-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-
             - virtualenv-{{ .Environment.CACHE_VERSION }}-
       - configure_github
+      - run:
+          name: Install uv
+          command: curl -LsSf https://astral.sh/uv/install.sh | sh && echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> $BASH_ENV
       - install_unixodbc
       - run:
           name: Install Python packages
           command: make sync
       - save_cache:
-          key: virtualenv-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+          key: virtualenv-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ checksum "uv.lock" }}
           paths:
             - "./.venv"
 
@@ -91,7 +92,7 @@ jobs:
       - update_virtualenv
       - restore_cache:
           keys:
-            - pip-cache-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+            - pip-cache-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ checksum "uv.lock" }}
             - pip-cache-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-
             - pip-cache-{{ .Environment.CACHE_VERSION }}-
       - run:
