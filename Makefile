@@ -9,50 +9,48 @@ help:
 .PHONY: init clean lock update install
 
 install: ## Initalise the virtual env installing deps
-	pipenv install --dev
-	pipenv run pip install -e .
+	uv sync --all-extras
 
 clean: ## Remove all the unwanted clutter
 	find src -type d -name __pycache__ | xargs rm -rf
 	find src -type d -name '*.egg-info' | xargs rm -rf
-	pipenv clean
+	rm -rf .venv
 
 lock: ## Lock dependencies
-	pipenv lock
+	uv lock
 
 update: ## Update dependencies (whole tree)
-	pipenv update --dev
+	uv lock --upgrade
 
 sync: ## Install dependencies as per the lock file
-	pipenv sync --dev
-	pipenv run pip install -e .
+	uv sync --all-extras
 
 # Linting and formatting
 .PHONY: lint test format
 
 lint: ## Lint files with flake and mypy
-	pipenv run flake8 src tests
-	pipenv run mypy src tests
-	pipenv run black --check src tests
-	pipenv run isort --check-only src tests
+	uv run flake8 src tests
+	uv run mypy src tests
+	uv run black --check src tests
+	uv run isort --check-only src tests
 
 
 format: ## Run black and isort
-	pipenv run black src tests
-	pipenv run isort src tests
+	uv run black src tests
+	uv run isort src tests
 
 # Testing
 
 .PHONY: test
-test: ## Run unit tests
-	pipenv run pytest tests
+unit: ## Run unit tests
+	uv run pytest tests/unit
 
 # Release
 package:
 	# create a source distribution
-	pipenv run python setup.py sdist
+	uv run python -m build --sdist
 	# create a wheel
-	pipenv run python setup.py bdist_wheel
+	uv run python -m build --wheel
 
 release: package
-	pipenv run twine upload dist/*
+	uv run twine upload dist/*
