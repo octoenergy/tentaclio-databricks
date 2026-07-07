@@ -27,6 +27,7 @@ classifiers = [
 dependencies = [
     "tentaclio",
     "databricks-sql-connector",
+    "pandas<3",
     "polars",
     "pyarrow",
 ]
