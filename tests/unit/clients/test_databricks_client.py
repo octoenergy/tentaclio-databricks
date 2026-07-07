@@ -166,12 +166,12 @@ class TestDatabricksClient:
         mock_cursor = mocker.MagicMock()
         client.cursor = mock_cursor
 
-        client.get_df("CREATE TABLE foo (id INT)")
+        client.get_df("SELECT 1")
 
         # Verify execute was called with prepended comment
         call_args = mock_cursor.execute.call_args[0][0]
         assert call_args.startswith("/* app_name='TestApp' */\n")
-        assert "CREATE TABLE foo" in call_args
+        assert "SELECT 1" in call_args
 
     def test_get_pl_prepends_comment(self, mocker):
         url = "databricks+thrift://token@host.databricks.com?HTTPPath=/sql/1.0/endpoints/123"
