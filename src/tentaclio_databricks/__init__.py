@@ -2,6 +2,7 @@
 
 from tentaclio import *  # noqa
 
+# fmt: off
 from .clients.databricks_client import DatabricksClient
 
 

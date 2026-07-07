@@ -173,7 +173,6 @@ class TestDatabricksClient:
         assert call_args.startswith("/* app_name='TestApp' */\n")
         assert "CREATE TABLE foo" in call_args
 
-
     def test_get_pl_prepends_comment(self, mocker):
         url = "databricks+thrift://token@host.databricks.com?HTTPPath=/sql/1.0/endpoints/123"
         client = DatabricksClient(URL(url), query_annotations={"app_name": "TestApp"})

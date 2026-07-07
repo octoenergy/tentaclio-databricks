@@ -1,6 +1,6 @@
 # Helper cli to encode urls.
 
-
+# fmt: off
 from tentaclio.__main__ import main
 
 
