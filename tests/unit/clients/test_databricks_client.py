@@ -2,6 +2,8 @@ from datetime import date, datetime
 from decimal import Decimal
 
 import pandas as pd
+import polars as pl
+import pyarrow as pa
 import pytest
 from tentaclio import URL
 
@@ -21,6 +23,7 @@ class TestDatabricksClient:
         # Client for Arrow-specific tests
         self.client_arrow = DatabricksClient(URL(self.databricks_test_url), use_arrow=True)
         self.expected = pd.DataFrame({"id": [1, 2, 3]})
+        self.expected_pl = pl.DataFrame({"id": [1, 2, 3]})
 
     @pytest.mark.parametrize(
         "url,server_hostname,http_path,access_token",
@@ -56,6 +59,15 @@ class TestDatabricksClient:
         client.cursor = mocked_cursor
         df = client.get_df("foo")
         assert df.equals(self.expected)
+
+    def test_get_pl(self, mocker):
+        client = self.client
+        client.__enter__ = lambda _: client  # type: ignore
+        mocked_cursor = mocker.MagicMock()
+        mocked_cursor.fetchall_arrow.return_value = pa.Table.from_pydict({"id": [1, 2, 3]})
+        client.cursor = mocked_cursor
+        df = client.get_pl("foo")
+        assert df.equals(self.expected_pl)
 
     @pytest.mark.parametrize(
         "url",

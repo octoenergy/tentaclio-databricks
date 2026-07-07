@@ -3,6 +3,7 @@
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
+import polars as pl
 from databricks import sql
 from tentaclio import URL
 
@@ -140,3 +141,11 @@ class DatabricksClient:
             else []
         )
         return pd.DataFrame(data, columns=columns)
+
+    def get_pl(self, sql_query: str, **kwargs) -> pl.DataFrame:
+        """Run a raw SQL query and return a polars DataFrame."""
+
+        self.cursor.execute(sql_query, **kwargs)
+        arrow_table = self.cursor.fetchall_arrow()
+
+        return pl.DataFrame(arrow_table)
