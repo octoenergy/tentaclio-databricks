@@ -158,6 +158,38 @@ class TestDatabricksClient:
         assert call_args.startswith("/* app_name='TestApp' */\n")
         assert "CREATE TABLE foo" in call_args
 
+    def test_get_df_prepends_comment(self, mocker):
+        url = "databricks+thrift://token@host.databricks.com?HTTPPath=/sql/1.0/endpoints/123"
+        client = DatabricksClient(URL(url), query_annotations={"app_name": "TestApp"})
+
+        # Mock cursor
+        mock_cursor = mocker.MagicMock()
+        client.cursor = mock_cursor
+
+        client.get_df("CREATE TABLE foo (id INT)")
+
+        # Verify execute was called with prepended comment
+        call_args = mock_cursor.execute.call_args[0][0]
+        assert call_args.startswith("/* app_name='TestApp' */\n")
+        assert "CREATE TABLE foo" in call_args
+
+
+    def test_get_pl_prepends_comment(self, mocker):
+        url = "databricks+thrift://token@host.databricks.com?HTTPPath=/sql/1.0/endpoints/123"
+        client = DatabricksClient(URL(url), query_annotations={"app_name": "TestApp"})
+
+        # Mock cursor
+        mock_cursor = mocker.MagicMock()
+        mock_cursor.fetchall_arrow.return_value = pa.Table.from_pydict({"id": [1, 2, 3]})
+        client.cursor = mock_cursor
+
+        client.get_pl("SELECT 1")
+
+        # Verify execute was called with prepended comment
+        call_args = mock_cursor.execute.call_args[0][0]
+        assert call_args.startswith("/* app_name='TestApp' */\n")
+        assert "SELECT 1" in call_args
+
     def test_get_df_arrow_path(self, mocker):
         """Test that Arrow path is used when enabled."""
         client = self.client_arrow
