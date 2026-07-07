@@ -121,6 +121,7 @@ class DatabricksClient:
 
     def get_df(self, sql_query: str, **kwargs) -> pd.DataFrame:
         """Run a raw SQL query and return a data frame."""
+        sql_query = self._prepend_comment(sql_query)
         self.cursor.execute(sql_query, **kwargs)
 
         if self.use_arrow:
@@ -144,7 +145,7 @@ class DatabricksClient:
 
     def get_pl(self, sql_query: str, **kwargs) -> pl.DataFrame:
         """Run a raw SQL query and return a polars DataFrame."""
-
+        sql_query = self._prepend_comment(sql_query)
         self.cursor.execute(sql_query, **kwargs)
         arrow_table = self.cursor.fetchall_arrow()
 
