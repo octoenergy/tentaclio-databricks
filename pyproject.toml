@@ -33,7 +33,7 @@ dependencies = [
 
 [project.optional-dependencies]
 polars = [
-    "polars",
+    "polars>=0.16",
 ]
 
 dev = [
