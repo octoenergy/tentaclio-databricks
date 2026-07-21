@@ -177,6 +177,8 @@ class TestDatabricksClient:
         # Mock cursor
         mock_cursor = mocker.MagicMock()
         client.cursor = mock_cursor
+        mock_cursor.fetchall.return_value = [(1,)]
+        mock_cursor.description = [("id", "int", None)]
 
         client.get_df("SELECT 1")
 
