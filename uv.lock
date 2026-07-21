@@ -3336,8 +3336,6 @@ source = { editable = "." }
 dependencies = [
     { name = "databricks-sql-connector" },
     { name = "pandas" },
-    { name = "polars", version = "1.36.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
-    { name = "polars", version = "1.42.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "pyarrow", version = "21.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "pyarrow", version = "24.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "tentaclio" },
@@ -3360,6 +3358,10 @@ dev = [
     { name = "pytest-mock" },
     { name = "twine" },
 ]
+polars = [
+    { name = "polars", version = "1.36.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "polars", version = "1.42.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -3371,7 +3373,7 @@ requires-dist = [
     { name = "moto", marker = "extra == 'dev'", specifier = "~=4.0.12" },
     { name = "mypy", marker = "extra == 'dev'" },
     { name = "pandas", specifier = "<3" },
-    { name = "polars" },
+    { name = "polars", marker = "extra == 'polars'" },
     { name = "pyarrow" },
     { name = "pytest", marker = "extra == 'dev'" },
     { name = "pytest-cov", marker = "extra == 'dev'" },
@@ -3379,7 +3381,7 @@ requires-dist = [
     { name = "tentaclio" },
     { name = "twine", marker = "extra == 'dev'" },
 ]
-provides-extras = ["dev"]
+provides-extras = ["polars", "dev"]
 
 [[package]]
 name = "thrift"

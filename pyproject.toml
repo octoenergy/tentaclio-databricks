@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tentaclio-databricks"
-version = "0.2.0"
+version = "2.1.0"
 description = "A python project containing all the dependencies for schema databricks for tentaclio."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -28,11 +28,14 @@ dependencies = [
     "tentaclio",
     "databricks-sql-connector",
     "pandas<3",
-    "polars",
     "pyarrow",
 ]
 
 [project.optional-dependencies]
+polars = [
+    "polars",
+]
+
 dev = [
     "pytest",
     "pytest-cov",
