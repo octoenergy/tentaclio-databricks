@@ -68,9 +68,9 @@ ignore = ["F405","W391","W503"]
 profile = "black"
 line_length = 99
 multi_line_output = 3
-include_trailing_comma = "True"
+include_trailing_comma = true
 default_section = "THIRDPARTY"
-known_first_party = "tentaclio-databricks"
+known_first_party = ["tentaclio_databricks"]
 sections = "STDLIB,THIRDPARTY,FIRSTPARTY,LOCALFOLDER"
 
 [tool.mypy]
