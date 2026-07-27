@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Changed
+  - Bump the minimum supported Python from 3.9 (EOL) to 3.10. CircleCI executors bumped from
+    `circleci/python:3.9` to `cimg/python3.10` accordingly.
+  - Release to PyPI via a GitHub Actions workflow using PyPI Trusted Publishing (OIDC),
+    instead of a CircleCI job using a long-lived API token. CircleCI still runs lint, unit, and
+    functional tests.
+  - Replace `twine` with `uv publish` for building/publishing/checking release artifacts.
+  - Derive the package version from the git tag at build time via `setuptools-scm`,
+    instead of a committed `version` field in `pyproject.toml`. Releases no longer
+    require a version-bump commit before tagging; `scripts/verify_version.py` is
+    removed since there's no longer a committed version to verify against tags.
+    `tentaclio_databricks.__version__` is now exposed at runtime via `importlib.metadata`.
+### Fixed
+  - Missing `_prepend_comment()` method call within the `get_df()` method.
+  - Make `isort` and `black` behaviour consistent for imports sorting and formatting.
+### Added
+  - Add `Programming Language :: Python :: 3.12`, `Programming Language :: Python :: 3.13` and
+    `Programming Language :: Python :: 3.14` classifiers.
+  - Add `get_pl()` method to fetch polars data frame from Databricks.
+  - Make `polars` an optional dependency accordingly. If `polars` is not available raise a
+    `ModuleNotFoundError`.
+
 ## [1.0.2] - 2022-04-25
 ### Changed
  - Set column names in get_df

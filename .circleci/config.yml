@@ -8,13 +8,8 @@ version: 2.1
 
 executors:
   standard:
-    parameters:
-      python_version:
-        type: string
-        default: "3.9"
     docker:
-      - image: cimg/python:<< parameters.python_version >>
-    working_directory: "~/lib"
+      - image: cimg/python:3.10
 
 # -----------------
 # Reusable commands
@@ -37,19 +32,12 @@ commands:
             - source-{{ .Branch }}-{{ .Revision }}
             - source-{{ .Branch }}-
             - source-
-      - checkout
+      - checkout:
+          method: full
       - save_cache:
           key: source-{{ .Branch }}-{{ .Revision }}
           paths:
             - "./.git"
-
-  install_unixodbc:
-    steps:
-      - run:
-          name: Instal UnixODBC
-          command: |
-            sudo apt-get update
-            sudo apt-get install -y unixodbc-dev
 
   update_virtualenv:
     steps:
@@ -59,10 +47,6 @@ commands:
             - virtualenv-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-
             - virtualenv-{{ .Environment.CACHE_VERSION }}-
       - configure_github
-      - run:
-          name: Install uv
-          command: curl -LsSf https://astral.sh/uv/install.sh | sh && echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> $BASH_ENV
-      - install_unixodbc
       - run:
           name: Install Python packages
           command: make sync
@@ -85,7 +69,7 @@ jobs:
     parameters:
       version:
         type: string
-        default: "3.9"
+        default: "3.10"
     executor:
       name: standard
       python_version: << parameters.version >>
@@ -95,33 +79,6 @@ jobs:
       - run:
           name: Run Python unit tests
           command: make tests
-
-  release:
-    executor: standard
-    steps:
-      - checkout_source
-      - update_virtualenv
-      - restore_cache:
-          keys:
-            - pip-cache-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ checksum "uv.lock" }}
-            - pip-cache-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-
-            - pip-cache-{{ .Environment.CACHE_VERSION }}-
-      - run:
-          name: Verify git tag vs. version
-          command: |
-            python3 -m venv venv
-            . venv/bin/activate
-            python setup.py verify
-      - run:
-          name: Init .pypirc
-          command: |
-            echo -e "[pypi]" >> ~/.pypirc
-            echo -e "username = octoenergy" >> ~/.pypirc
-            echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
-      - run:
-          name: Create release
-          command: |
-            make release
 
 workflows:
   version: 2
@@ -135,17 +92,8 @@ workflows:
       - test:
           matrix:
             parameters:
-              version: ["3.14", "3.13", "3.12", "3.11", "3.10", "3.9"]
+              version: ["3.14", "3.13", "3.12", "3.11", "3.10"]
           filters:
             tags:
               only: /.*/
-      - release:
-          requires:
-            - lint
-            - test
-          filters:
-            tags:
-              only: /[0-9]+(\.[0-9]+)*(-alpha\.[0-9]+)?/
-            branches:
-              ignore: /.*/
-          context: TENTACLIO
+
