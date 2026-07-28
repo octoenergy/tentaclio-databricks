@@ -11,6 +11,7 @@ executors:
     docker:
       - image: cimg/python:3.10
 
+
 # -----------------
 # Reusable commands
 # -----------------
@@ -66,7 +67,11 @@ jobs:
           command: make lint
 
   tests:
-    executor: standard
+    parameters:
+      python-version:
+        type: string
+    docker:
+      - image: cimg/python:<< parameters.python-version >>
     steps:
       - checkout_source
       - update_virtualenv
@@ -80,10 +85,13 @@ workflows:
   test-build-deploy:
     jobs:
       - lint:
-        filters:
-          tags:
-            only: /.*/
+          filters:
+            tags:
+              only: /.*/
       - tests:
-        filters:
-          tags:
-            only: /.*/
+          matrix:
+            parameters:
+              python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+          filters:
+            tags:
+              only: /.*/
