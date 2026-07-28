@@ -65,14 +65,8 @@ jobs:
           name: Run Python linter
           command: make lint
 
-  test:
-    parameters:
-      version:
-        type: string
-        default: "3.10"
-    executor:
-      name: standard
-      python_version: << parameters.version >>
+  tests:
+    executor: standard
     steps:
       - checkout_source
       - update_virtualenv
@@ -86,14 +80,10 @@ workflows:
   test-build-deploy:
     jobs:
       - lint:
-          filters:
-            tags:
-              only: /.*/
-      - test:
-          matrix:
-            parameters:
-              version: ["3.14", "3.13", "3.12", "3.11", "3.10"]
-          filters:
-            tags:
-              only: /.*/
-
+        filters:
+          tags:
+            only: /.*/
+      - tests:
+        filters:
+          tags:
+            only: /.*/

@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Changed
   - Bump the minimum supported Python from 3.9 (EOL) to 3.10. CircleCI executors bumped from
-    `circleci/python:3.9` to `cimg/python3.10` accordingly.
+    `circleci/python:3.9` to `cimg/python:3.10` accordingly.
   - Release to PyPI via a GitHub Actions workflow using PyPI Trusted Publishing (OIDC),
     instead of a CircleCI job using a long-lived API token. CircleCI still runs lint, unit, and
     functional tests.
