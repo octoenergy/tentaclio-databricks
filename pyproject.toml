@@ -44,8 +44,6 @@ dev = [
     "Flake8-pyproject",
     "isort>=5.11.2",
     "mypy",
-    "twine",
-    "moto~=4.0.12",
 ]
 
 [tool.setuptools.packages.find]
