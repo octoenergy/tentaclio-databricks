@@ -1,15 +1,19 @@
 ---
-# Python CircleCI 2.0 configuration file
+# Python CircleCI configuration file
 #
 # INFO: Check CircleCI documentation for more details
-#       https://circleci.com/docs/2.0/language-python/
+#       https://circleci.com/docs/guides/getting-started/language-python
 
 version: 2.1
 
 executors:
   standard:
+    parameters:
+      python-version:
+        default: "3.10"
+        type: string
     docker:
-      - image: cimg/python:3.10
+      - image: cimg/python:<< parameters.python-version >>
 
 
 # -----------------
@@ -41,27 +45,38 @@ commands:
             - "./.git"
 
   update_virtualenv:
+    parameters:
+      python-version:
+        type: string
     steps:
       - restore_cache:
           keys:
-            - virtualenv-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ checksum "uv.lock" }}
-            - virtualenv-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-
-            - virtualenv-{{ .Environment.CACHE_VERSION }}-
+            - virtualenv-<< parameters.python-version >>-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ checksum "uv.lock" }}
+            - virtualenv-<< parameters.python-version >>-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-
+            - virtualenv-<< parameters.python-version >>-{{ .Environment.CACHE_VERSION }}-
       - configure_github
       - run:
           name: Install Python packages
           command: make sync
       - save_cache:
-          key: virtualenv-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ checksum "uv.lock" }}
+          key: virtualenv-<< parameters.python-version >>-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ checksum "uv.lock" }}
           paths:
             - "./.venv"
 
+
 jobs:
   lint:
-    executor: standard
+    parameters:
+      python-version:
+        default: "3.10"
+        type: string
+    executor:
+      name: standard
+      python-version: << parameters.python-version >>
     steps:
       - checkout_source
-      - update_virtualenv
+      - update_virtualenv:
+          python-version: << parameters.python-version >>
       - run:
           name: Run Python linter
           command: make lint
@@ -70,14 +85,17 @@ jobs:
     parameters:
       python-version:
         type: string
-    docker:
-      - image: cimg/python:<< parameters.python-version >>
+    executor:
+      name: standard
+      python-version: << parameters.python-version >>
     steps:
       - checkout_source
-      - update_virtualenv
+      - update_virtualenv:
+          python-version: << parameters.python-version >>
       - run:
           name: Run Python unit tests
           command: make tests
+
 
 workflows:
   version: 2
@@ -85,9 +103,9 @@ workflows:
   test-build-deploy:
     jobs:
       - lint:
-          filters:
-            tags:
-              only: /.*/
+        filters:
+          tags:
+            only: /.*/
       - tests:
           matrix:
             parameters:
