@@ -1,10 +1,16 @@
 """Databricks query client."""
 
-from typing import Any, Dict, List, Optional
+import importlib
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 import pandas as pd
 from databricks import sql
 from tentaclio import URL
+
+if TYPE_CHECKING:
+    from polars import DataFrame as PolarsDataFrame  # pyright: ignore[reportMissingImports]
+else:
+    PolarsDataFrame = Any
 
 
 class DatabricksClientException(Exception):
@@ -120,6 +126,7 @@ class DatabricksClient:
 
     def get_df(self, sql_query: str, **kwargs) -> pd.DataFrame:
         """Run a raw SQL query and return a data frame."""
+        sql_query = self._prepend_comment(sql_query)
         self.cursor.execute(sql_query, **kwargs)
 
         if self.use_arrow:
@@ -140,3 +147,21 @@ class DatabricksClient:
             else []
         )
         return pd.DataFrame(data, columns=columns)
+
+    def get_pl(self, sql_query: str, **kwargs) -> PolarsDataFrame:
+        """Run a raw SQL query and return a polars DataFrame."""
+
+        try:
+            pl = importlib.import_module("polars")
+        except ModuleNotFoundError as exc:
+            raise ModuleNotFoundError(
+                "Polars is not installed. Install it with "
+                "`pip install tentaclio-databricks[polars]` or `pip install polars` to use "
+                "the `.get_pl()` method."
+            ) from exc
+
+        sql_query = self._prepend_comment(sql_query)
+        self.cursor.execute(sql_query, **kwargs)
+        arrow_table = self.cursor.fetchall_arrow()
+
+        return pl.DataFrame(arrow_table)

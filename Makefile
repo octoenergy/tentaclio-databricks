@@ -6,15 +6,14 @@ help:
 	@grep -E '^[0-9a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 # Local installation
-.PHONY: init clean lock update install
+.PHONY: reset clean lock update sync
 
-install: ## Initalise the virtual env installing deps
-	uv sync --all-extras
+reset: clean sync
 
 clean: ## Remove all the unwanted clutter
 	find src -type d -name __pycache__ | xargs rm -rf
 	find src -type d -name '*.egg-info' | xargs rm -rf
-	rm -rf .venv
+	uv clean
 
 lock: ## Lock dependencies
 	uv lock
@@ -25,8 +24,10 @@ update: ## Update dependencies (whole tree)
 sync: ## Install dependencies as per the lock file
 	uv sync --all-extras
 
+
 # Linting and formatting
-.PHONY: lint test format
+
+.PHONY: lint format
 
 lint: ## Lint files with flake and mypy
 	uv run flake8 src tests
@@ -34,14 +35,14 @@ lint: ## Lint files with flake and mypy
 	uv run black --check src tests
 	uv run isort --check-only src tests
 
-
 format: ## Run black and isort
 	uv run black src tests
 	uv run isort src tests
 
+
 # Testing
 
-.PHONY: test tests unit
+.PHONY: tests test unit
 
 # Pytest test commands
 # Run all tests
@@ -61,12 +62,16 @@ test: ## Run a specific test expression (requires TEST=...)
 unit: ## Run unit tests only
 	uv run pytest tests/unit
 
+
 # Release
+
+.PHONY: package check-release release
+
 package:
-	# create a source distribution
-	uv run python -m build --sdist
-	# create a wheel
-	uv run python -m build --wheel
+	uv build
+
+check-release: package
+	uv publish --dry-run
 
 release: package
-	uv run twine upload dist/*
+	uv publish

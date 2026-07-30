@@ -1,13 +1,13 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=61.0", "setuptools-scm>=8", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "tentaclio-databricks"
-version = "0.1.0"
+dynamic = ["version"]
 description = "A python project containing all the dependencies for schema databricks for tentaclio."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = "MIT"
 authors = [
     {name = "Octopus Energy", email = "nerds@octopus.energy"}
@@ -17,16 +17,24 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
     "tentaclio",
     "databricks-sql-connector",
+    "pandas<3",
+    "pyarrow",
 ]
 
 [project.optional-dependencies]
+polars = [
+    "polars>=0.16",
+]
+
 dev = [
     "pytest",
     "pytest-cov",
@@ -36,17 +44,17 @@ dev = [
     "Flake8-pyproject",
     "isort>=5.11.2",
     "mypy",
-    "twine",
-    "moto~=4.0.12",
 ]
 
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["*tentaclio_databricks*"]
 
+[tool.setuptools_scm]
+fallback_version = "0.0.0"
+
 [tool.black]
 line-length = 99
-target_version = ['py37']
 include = '\.pyi?$'
 exclude = '(\.mypy_cache)'
 
@@ -57,12 +65,12 @@ max-complexity = 10
 ignore = ["F405","W391","W503"]
 
 [tool.isort]
+profile = "black"
 line_length = 99
 multi_line_output = 3
-lines_after_imports = 2
-include_trailing_comma = "True"
+include_trailing_comma = true
 default_section = "THIRDPARTY"
-known_first_party = "tentaclio-databricks"
+known_first_party = ["tentaclio_databricks"]
 sections = "STDLIB,THIRDPARTY,FIRSTPARTY,LOCALFOLDER"
 
 [tool.mypy]

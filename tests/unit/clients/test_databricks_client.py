@@ -1,7 +1,9 @@
+import sys
 from datetime import date, datetime
 from decimal import Decimal
 
 import pandas as pd
+import pyarrow as pa
 import pytest
 from tentaclio import URL
 
@@ -56,6 +58,28 @@ class TestDatabricksClient:
         client.cursor = mocked_cursor
         df = client.get_df("foo")
         assert df.equals(self.expected)
+
+    def test_get_pl(self, mocker):
+        pl = pytest.importorskip("polars")
+
+        client = self.client
+        client.__enter__ = lambda _: client  # type: ignore
+        mocked_cursor = mocker.MagicMock()
+        mocked_cursor.fetchall_arrow.return_value = pa.Table.from_pydict({"id": [1, 2, 3]})
+        client.cursor = mocked_cursor
+        df = client.get_pl("foo")
+        assert df.equals(pl.DataFrame({"id": [1, 2, 3]}))
+
+    def test_get_pl_raises_without_polars(self, mocker, monkeypatch):
+        client = self.client
+        client.__enter__ = lambda _: client  # type: ignore
+        mocked_cursor = mocker.MagicMock()
+        client.cursor = mocked_cursor
+
+        monkeypatch.setitem(sys.modules, "polars", None)
+
+        with pytest.raises(ModuleNotFoundError, match="Polars is not installed"):
+            client.get_pl("foo")
 
     @pytest.mark.parametrize(
         "url",
@@ -145,6 +169,41 @@ class TestDatabricksClient:
         call_args = mock_cursor.execute.call_args[0][0]
         assert call_args.startswith("/* app_name='TestApp' */\n")
         assert "CREATE TABLE foo" in call_args
+
+    def test_get_df_prepends_comment(self, mocker):
+        url = "databricks+thrift://token@host.databricks.com?HTTPPath=/sql/1.0/endpoints/123"
+        client = DatabricksClient(URL(url), query_annotations={"app_name": "TestApp"})
+
+        # Mock cursor
+        mock_cursor = mocker.MagicMock()
+        client.cursor = mock_cursor
+        mock_cursor.fetchall.return_value = [(1,)]
+        mock_cursor.description = [("id", "int", None)]
+
+        client.get_df("SELECT 1")
+
+        # Verify execute was called with prepended comment
+        call_args = mock_cursor.execute.call_args[0][0]
+        assert call_args.startswith("/* app_name='TestApp' */\n")
+        assert "SELECT 1" in call_args
+
+    def test_get_pl_prepends_comment(self, mocker):
+        pytest.importorskip("polars")
+
+        url = "databricks+thrift://token@host.databricks.com?HTTPPath=/sql/1.0/endpoints/123"
+        client = DatabricksClient(URL(url), query_annotations={"app_name": "TestApp"})
+
+        # Mock cursor
+        mock_cursor = mocker.MagicMock()
+        mock_cursor.fetchall_arrow.return_value = pa.Table.from_pydict({"id": [1, 2, 3]})
+        client.cursor = mock_cursor
+
+        client.get_pl("SELECT 1")
+
+        # Verify execute was called with prepended comment
+        call_args = mock_cursor.execute.call_args[0][0]
+        assert call_args.startswith("/* app_name='TestApp' */\n")
+        assert "SELECT 1" in call_args
 
     def test_get_df_arrow_path(self, mocker):
         """Test that Arrow path is used when enabled."""
